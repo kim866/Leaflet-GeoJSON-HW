@@ -1,0 +1,142 @@
+var map = L.map("mapid", {
+  center: [
+    40.7, -94.5
+  ],
+  zoom: 3
+});
+
+var apiKey = "sk.eyJ1Ijoia2ltODY2IiwiYSI6ImNqdWJnOGhxNzA4MnYzeXF5eHN4aDBrcXgifQ.jkpEQO7HSRwn6DcqFG25Gg";
+
+var grayscale = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
+  attribution: "Map data &copy; <a href='https://www.openstreetmap.org/'>OpenStreetMap</a> contributors, <a href='https://creativecommons.org/licenses/by-sa/2.0/'>CC-BY-SA</a>, Imagery © <a href='https://www.mapbox.com/'>Mapbox</a>",
+  maxZoom: 18,
+  id: "mapbox.light",
+  accessToken: apiKey
+});
+
+var satellite = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
+  attribution: "Map data &copy; <a href='https://www.openstreetmap.org/'>OpenStreetMap</a> contributors, <a href='https://creativecommons.org/licenses/by-sa/2.0/'>CC-BY-SA</a>, Imagery © <a href='https://www.mapbox.com/'>Mapbox</a>",
+  maxZoom: 18,
+  id: "mapbox.satellite",
+  accessToken: apiKey
+});
+
+var outdoors = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
+  attribution: "Map data &copy; <a href='https://www.openstreetmap.org/'>OpenStreetMap</a> contributors, <a href='https://creativecommons.org/licenses/by-sa/2.0/'>CC-BY-SA</a>, Imagery © <a href='https://www.mapbox.com/'>Mapbox</a>",
+  maxZoom: 18,
+  id: "mapbox.outdoors",
+  accessToken: apiKey
+});
+
+var baseMaps = {
+  "Satellite": satellite,
+  "Grayscale": grayscale,
+  "Outdoors" : outdoors
+};
+
+let plates = L.layerGroup().addTo(map);
+let earthquakes = L.layerGroup().addTo(map);
+
+d3.json("GeoJSON/PB2002_plates.json", function(data){
+  console.log(data)
+  L.geoJson(data, {
+    onEachFeature: function(feature, layer) {
+      plates.addLayer(layer)
+    }
+  });
+
+});
+
+d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson", function(data) {
+
+  function styleInfo(feature) {
+    return {
+      opacity: 1,
+      fillOpacity: 1,
+      fillColor: getColor(feature.properties.mag),
+      color: "#000000",
+      radius: getRadius(feature.properties.mag),
+      stroke: true,
+      weight: 0.5
+    };
+  }
+
+  function getColor(magnitude) {
+    switch (true) {
+    case magnitude > 5:
+      return "#ea2c2c";
+    case magnitude > 4:
+      return "#ea822c";
+    case magnitude > 3:
+      return "#ee9c00";
+    case magnitude > 2:
+      return "#eecc00";
+    case magnitude > 1:
+      return "#d4ee00";
+    default:
+      return "#98ee00";
+    }
+  }
+
+  function getRadius(magnitude) {
+    if (magnitude === 0) {
+      return 1;
+    }
+    return magnitude * 4;
+  }
+
+  L.geoJson(data, {
+    // We turn each feature into a circleMarker on the map.
+    pointToLayer: function(feature, latlng) {
+      return L.circleMarker(latlng);
+    },
+    // We set the style for each circleMarker using our styleInfo function.
+    style: styleInfo,
+    // We create a popup for each marker to display the magnitude and location of the earthquake after the marker has been created and styled
+    onEachFeature: function(feature, layer) {
+      earthquakes.addLayer(layer)
+      //layer.bindPopup("Magnitude: " + feature.properties.mag + "<br>Location: " + feature.properties.place);
+    }
+  }).addTo(map);
+});
+
+
+let layerControl = {
+  "Fault Lines": plates, // an option to show or hide the layer you created from geojson
+  "Earthquakes" : earthquakes,
+
+};
+
+var legend = L.control({
+  position: "bottomright"
+});
+
+// Then add all the details for the legend
+legend.onAdd = function() {
+  var div = L.DomUtil.create("div", "info legend");
+
+  var grades = [0, 1, 2, 3, 4, 5];
+  var colors = [
+    "#98ee00",
+    "#d4ee00",
+    "#eecc00",
+    "#ee9c00",
+    "#ea822c",
+    "#ea2c2c"
+  ];
+
+  // Looping through our intervals to generate a label with a colored square for each interval.
+  for (var i = 0; i < grades.length; i++) {
+    div.innerHTML +=
+      "<i style='background: " + colors[i] + "'></i> " +
+      grades[i] + (grades[i + 1] ? "&ndash;" + grades[i + 1] + "<br>" : "+");
+  }
+  return div;
+};
+
+// Finally, we our legend to the map.
+legend.addTo(map);
+
+/* 5 */
+// Add the control component, a layer list with checkboxes for operational layers and radio buttons for basemaps
+L.control.layers(baseMaps, layerControl).addTo( map );

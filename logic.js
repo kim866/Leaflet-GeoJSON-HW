@@ -3,10 +3,10 @@ console.log("working");
 
 var apiKey = "sk.eyJ1Ijoia2ltODY2IiwiYSI6ImNqdWJnOGhxNzA4MnYzeXF5eHN4aDBrcXgifQ.jkpEQO7HSRwn6DcqFG25Gg";
 
-var graymap = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
+var grayscale = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
   attribution: "Map data &copy; <a href='https://www.openstreetmap.org/'>OpenStreetMap</a> contributors, <a href='https://creativecommons.org/licenses/by-sa/2.0/'>CC-BY-SA</a>, Imagery © <a href='https://www.mapbox.com/'>Mapbox</a>",
   maxZoom: 18,
-  id: "mapbox.streets",
+  id: "mapbox.light",
   accessToken: apiKey
 });
 
@@ -25,9 +25,9 @@ var outdoors = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png
 });
 
 var baseMaps = {
-  "Graymap": graymap,
   "Satellite": satellite,
-  "Outdoors" : outdoors,
+  "Grayscale": grayscale,
+  "Outdoors" : outdoors
 };
 
 // We create the map object with options.
@@ -36,14 +36,14 @@ var map = L.map("mapid", {
     40.7, -94.5
   ],
   zoom: 3,
-  layers:[graymap]
+  layers:[satellite]
 });
 
 L.control.layers(baseMaps).addTo(map);
 
 
 // Then we add our 'graymap' tile layer to the map.
-graymap.addTo(map);
+//graymap.addTo(map);
 
 // Here we make an AJAX call that retrieves our earthquake geoJSON data.
 d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson", function(data) {
