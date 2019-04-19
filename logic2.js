@@ -94,10 +94,10 @@ d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geoj
     style: styleInfo,
     // We create a popup for each marker to display the magnitude and location of the earthquake after the marker has been created and styled
     onEachFeature: function(feature, layer) {
-      earthquakes.addLayer(layer)
-      //layer.bindPopup("Magnitude: " + feature.properties.mag + "<br>Location: " + feature.properties.place);
+      layer.bindPopup("Magnitude: " + feature.properties.mag + "<br>Location: " + feature.properties.place),
+      earthquakes.addLayer(layer);
     }
-  }).addTo(map);
+  })
 });
 
 
